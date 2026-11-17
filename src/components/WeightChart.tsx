@@ -17,6 +17,14 @@ type ChartEntry = {
   trend?: number;
 };
 
+function parseDateMs(date: string): number {
+  return Date.parse(`${date}T00:00:00Z`);
+}
+
+function formatTick(ms: number): string {
+  return new Date(ms).toISOString().slice(5, 10);
+}
+
 export default function WeightChart({
   data,
   targetWeight,
@@ -32,19 +40,23 @@ export default function WeightChart({
     );
   }
 
+  const chartData = data.map((d) => ({ ...d, t: parseDateMs(d.date) }));
+
   return (
     <div className="h-64 w-full">
       <ResponsiveContainer width="100%" height="100%">
-        <LineChart data={data} margin={{ top: 8, right: 16, bottom: 0, left: -16 }}>
+        <LineChart data={chartData} margin={{ top: 8, right: 16, bottom: 0, left: -16 }}>
           <CartesianGrid strokeDasharray="3 3" className="stroke-neutral-200 dark:stroke-neutral-800" />
           <XAxis
-            dataKey="date"
+            dataKey="t"
+            type="number"
+            domain={["dataMin", "dataMax"]}
             tick={{ fontSize: 12 }}
-            tickFormatter={(value: string) => value.slice(5)}
+            tickFormatter={formatTick}
           />
           <YAxis tick={{ fontSize: 12 }} domain={["auto", "auto"]} />
           <Tooltip
-            labelFormatter={(value) => `Date: ${value}`}
+            labelFormatter={(value) => `Date: ${formatTick(Number(value))}`}
             formatter={(value, name) =>
               [Number(value).toFixed(1), name] as [string, string]
             }
