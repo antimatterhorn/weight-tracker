@@ -1,33 +1,79 @@
 import { clearGoal, setGoal } from "@/lib/actions";
 
+function formatProjectedDate(daysFromNow: number): string {
+  const d = new Date();
+  d.setUTCDate(d.getUTCDate() + Math.round(daysFromNow));
+  return d.toLocaleDateString(undefined, {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
 export default function GoalCard({
   targetWeight,
   currentWeight,
+  startingWeight,
+  lbsPerWeek,
+  daysToGoal,
 }: {
   targetWeight: number | null;
   currentWeight: number | null;
+  startingWeight: number | null;
+  lbsPerWeek: number | null;
+  daysToGoal: number | null;
 }) {
   const diff =
     targetWeight != null && currentWeight != null
       ? currentWeight - targetWeight
       : null;
 
+  const percentLost =
+    startingWeight != null && currentWeight != null && startingWeight !== 0
+      ? ((startingWeight - currentWeight) / startingWeight) * 100
+      : null;
+
   return (
     <div className="space-y-3">
       {targetWeight != null ? (
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm text-neutral-500 dark:text-neutral-400">Goal weight</p>
-            <p className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
-              {targetWeight}
-            </p>
-            {diff != null && (
+        <div className="flex items-start justify-between">
+          <div className="space-y-2">
+            <div>
+              <p className="text-sm text-neutral-500 dark:text-neutral-400">Goal weight</p>
+              <p className="text-2xl font-semibold text-neutral-900 dark:text-neutral-100">
+                {targetWeight}
+              </p>
+              {diff != null && (
+                <p className="text-sm text-neutral-500 dark:text-neutral-400">
+                  {diff > 0
+                    ? `${diff.toFixed(1)} to go`
+                    : diff < 0
+                      ? `${Math.abs(diff).toFixed(1)} past goal`
+                      : "At goal"}
+                  {percentLost != null && (
+                    <>
+                      {" · "}
+                      {percentLost > 0
+                        ? `${percentLost.toFixed(1)}% lost`
+                        : percentLost < 0
+                          ? `${Math.abs(percentLost).toFixed(1)}% gained`
+                          : "no change"}
+                    </>
+                  )}
+                </p>
+              )}
+            </div>
+            {lbsPerWeek != null && Math.abs(lbsPerWeek) >= 0.05 && (
               <p className="text-sm text-neutral-500 dark:text-neutral-400">
-                {diff > 0
-                  ? `${diff.toFixed(1)} to go`
-                  : diff < 0
-                    ? `${Math.abs(diff).toFixed(1)} past goal`
-                    : "At goal"}
+                Trending {lbsPerWeek < 0 ? "down" : "up"}{" "}
+                {Math.abs(lbsPerWeek).toFixed(1)} lbs/week
+              </p>
+            )}
+            {diff != null && diff > 0 && (
+              <p className="text-sm text-neutral-500 dark:text-neutral-400">
+                {daysToGoal != null
+                  ? `At this rate: ~${Math.round(daysToGoal)} days (${(daysToGoal / 7).toFixed(1)} wks) to goal — around ${formatProjectedDate(daysToGoal)}`
+                  : "Trend isn't heading toward your goal yet."}
               </p>
             )}
           </div>

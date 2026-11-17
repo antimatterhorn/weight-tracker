@@ -6,6 +6,7 @@ import EntryList from "@/components/EntryList";
 import GoalCard from "@/components/GoalCard";
 import WeightChart from "@/components/WeightChart";
 import LogoutButton from "@/components/LogoutButton";
+import { daysToReach, linearRegression, predictedWeight } from "@/lib/stats";
 
 export const dynamic = "force-dynamic";
 
@@ -15,12 +16,24 @@ export default async function Home() {
     db.select().from(goal).limit(1),
   ]);
 
-  const chartData = [...allEntries]
+  const points = [...allEntries]
     .reverse()
     .map((e) => ({ date: e.date, weight: e.weight }));
 
   const targetWeight = goals[0]?.targetWeight ?? null;
   const currentWeight = allEntries[0]?.weight ?? null;
+  const startingWeight = points[0]?.weight ?? null;
+
+  const regression = linearRegression(points);
+  const chartData = points.map((p) => ({
+    ...p,
+    trend: regression ? predictedWeight(regression, p.date) : undefined,
+  }));
+  const lbsPerWeek = regression ? regression.slope * 7 : null;
+  const daysToGoal =
+    regression && targetWeight != null
+      ? daysToReach(regression, new Date().toISOString().slice(0, 10), targetWeight)
+      : null;
 
   return (
     <div className="min-h-screen bg-neutral-50 px-4 py-8 dark:bg-neutral-950 sm:px-8">
@@ -40,7 +53,13 @@ export default async function Home() {
         </section>
 
         <section className="rounded-xl border border-neutral-200 bg-white p-5 shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
-          <GoalCard targetWeight={targetWeight} currentWeight={currentWeight} />
+          <GoalCard
+            targetWeight={targetWeight}
+            currentWeight={currentWeight}
+            startingWeight={startingWeight}
+            lbsPerWeek={lbsPerWeek}
+            daysToGoal={daysToGoal}
+          />
         </section>
 
         <section className="rounded-xl border border-neutral-200 bg-white p-5 shadow-sm dark:border-neutral-800 dark:bg-neutral-900">

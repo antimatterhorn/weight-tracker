@@ -14,6 +14,7 @@ import {
 type ChartEntry = {
   date: string;
   weight: number;
+  trend?: number;
 };
 
 export default function WeightChart({
@@ -44,8 +45,8 @@ export default function WeightChart({
           <YAxis tick={{ fontSize: 12 }} domain={["auto", "auto"]} />
           <Tooltip
             labelFormatter={(value) => `Date: ${value}`}
-            formatter={(value) =>
-              [Number(value).toFixed(1), "Weight"] as [string, string]
+            formatter={(value, name) =>
+              [Number(value).toFixed(1), name] as [string, string]
             }
           />
           {targetWeight != null && (
@@ -59,10 +60,22 @@ export default function WeightChart({
           <Line
             type="monotone"
             dataKey="weight"
+            name="Weight"
             stroke="#2563eb"
             strokeWidth={2}
             dot={{ r: 3 }}
             activeDot={{ r: 5 }}
+          />
+          <Line
+            type="linear"
+            dataKey="trend"
+            stroke="#9333ea"
+            strokeWidth={1.5}
+            strokeDasharray="5 3"
+            dot={false}
+            isAnimationActive={false}
+            legendType="none"
+            name="Trend"
           />
         </LineChart>
       </ResponsiveContainer>
